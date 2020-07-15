@@ -1,11 +1,11 @@
 import scapy.all as scapy
-import optparse
+import argparse
 
 def get_arguments():
-    parser = optparse.OptionParser()
-    parser.add_option("-i", "--ip", dest="ip", help="IP or range of IP's you want to scan")
-    options, arguments = parser.parse_args()
-    if not options.ip:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-t", "--target", dest="target", help="IP or range of IP's you want to scan")
+    options = parser.parse_args()
+    if not options.target:
         parser.error("[-] Please enter an IP address or range of IP's to scan")
     return options
 
@@ -15,10 +15,18 @@ def scan(ip):
     arp_request_broadcast = broadcast/arp_request
     answered_list = scapy.srp(arp_request_broadcast, timeout=1, verbose=False)[0]
 
-    print("IP\t\t\tMAC Address\n--------------------------------------")
+    clients_list = []
     for element in answered_list:
-        print(element[1].psrc + "\t\t" + element[1].hwsrc)
+        client_dict = {"ip": element[1].psrc, "mac": element[1].hwsrc}
+        clients_list.append(client_dict)
+    return clients_list
+
+def print_result(results_list):
+    print("IP\t\t\tMAC Address\n--------------------------------------")
+    for client in results_list:
+        print(client["ip"] + "\t\t" + client["mac"])
 
 options=get_arguments()
 
-scan(options.ip)
+scan_result = scan(options.target)
+print_result(scan_result)
